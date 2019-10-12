@@ -1,8 +1,3 @@
-" vim-bootstrap 55985df
-
-"*****************************************************************************
-"" Vim-PLug core
-"*****************************************************************************
 if has('vim_starting')
   set nocompatible               " Be iMproved
 endif
@@ -32,11 +27,13 @@ call plug#begin(expand('~/.vim/plugged'))
 "" Plug install packages
 "*****************************************************************************
 Plug 'scrooloose/nerdtree'
+Plug 'posva/vim-vue'
+Plug 'morhetz/gruvbox'
 Plug 'jistr/vim-nerdtree-tabs'
 Plug 'tpope/vim-commentary'
 Plug 'tpope/vim-fugitive'
-Plug 'vim-airline/vim-airline'
-Plug 'vim-airline/vim-airline-themes'
+"Plug 'vim-airline/vim-airline'
+"Plug 'vim-airline/vim-airline-themes'
 Plug 'airblade/vim-gitgutter'
 Plug 'vim-scripts/grep.vim'
 Plug 'vim-scripts/CSApprox'
@@ -54,6 +51,9 @@ Plug 'benmills/vimux'
 Plug 'benmills/vimux-golang'
 Plug 'julienr/vim-cellmode'
 Plug 'christoomey/vim-tmux-navigator'
+Plug 'janko/vim-test'
+" Plug 'ludovicchabant/vim-gutentags'
+Plug 'neoclide/coc.nvim', {'branch': 'release'}
 
 
 if isdirectory('/usr/local/opt/fzf')
@@ -119,7 +119,8 @@ Plug 'mattn/emmet-vim'
 
 " javascript
 "" Javascript Bundle
-Plug 'jelera/vim-javascript-syntax'
+"" Plug 'jelera/vim-javascript-syntax'
+"" Plug 'w0rp/ale'
 
 
 " python
@@ -200,7 +201,7 @@ set ruler
 set number
 
 let no_buffers_menu=1
-colorscheme solarized
+colorscheme gruvbox
 set background=dark
 
 set mousemodel=popup
@@ -265,10 +266,11 @@ if exists("*fugitive#statusline")
   set statusline+=%{fugitive#statusline()}
 endif
 
+
 " vim-airline
 let g:airline_theme = 'powerlineish'
 let g:airline#extensions#syntastic#enabled = 1
-let g:airline#extensions#branch#enabled = 1
+let g:airline#extensions#branch#enabled = 0
 let g:airline#extensions#tabline#enabled = 1
 let g:airline#extensions#tagbar#enabled = 1
 let g:airline_skip_empty_sections = 1
@@ -417,12 +419,6 @@ set wildmode=list:longest,list:full
 set wildignore+=*.o,*.obj,.git,*.rbc,*.pyc,__pycache__
 let $FZF_DEFAULT_COMMAND =  "find * -path '*/\.*' -prune -o -path 'node_modules/**' -prune -o -path 'target/**' -prune -o -path 'dist/**' -prune -o  -type f -print -o -type l -print 2> /dev/null"
 
-" The Silver Searcher
-if executable('ag')
-  let $FZF_DEFAULT_COMMAND = 'ag --hidden --ignore .git -g ""'
-  set grepprg=ag\ --nogroup\ --nocolor
-endif
-
 " ripgrep
 if executable('rg')
   let $FZF_DEFAULT_COMMAND = 'rg --files --hidden --follow --glob "!.git/*"'
@@ -568,8 +564,13 @@ augroup END
 
 augroup elm
   au!
-  au FileType elm nmap <leader>f  :ElmFormat<cr>
-augroup END
+  au filetype elm nmap <leader>f  :elmformat<cr>
+augroup end
+
+augroup javascript
+  au!
+  au filetype elm nmap <leader>f  :CocCommand eslint.executeAutofix<cr>
+augroup end
 
 augroup go
 
@@ -605,7 +606,9 @@ nmap =j :%!python -m json.tool<CR>
 let g:ctrlp_map = '<c-p>'
 let g:ctrlp_cmd = 'CtrlP'
 let g:ctrlp_working_path_mode = 'ra'
-let g:ctrlp_user_command = 'rg %s --files -i --color=never --glob ''!.git'' --glob ''!.DS_Store'' --glob ''!node_modules'' --hidden --no-messages -g ""'
+"""let g:ctrlp_user_command = ['.git/', 'git ls-files --cached --others  --exclude-standard %s']
+let g:ctrlp_cache_dir = $HOME . '/.cache/ctrlp'
+let g:ctrlp_user_command = 'rg %s --files -i --color=never --glob ''!.git'' --glob ''!.DS_Store'' --glob ''!node_modules'' --glob ''!site-packages'' --hidden --no-messages -g ""'
 let g:ctrlp_extensions = ['funky']
 let g:ctrlp_use_caching = 0
 
@@ -621,9 +624,15 @@ map <F12> :w<CR>:!aspell -c %<CR><CR>:e<CR><CR>
 let g:javascript_enable_domhtmlcss = 1
 
 " vim-javascript
+au BufRead,BufNewFile *.vue set filetype=javascript
+" let g:vue_pre_processors = ['sass', 'scss']
+let g:vue_pre_processors = []
+
+
 augroup vimrc-javascript
   autocmd!
-  autocmd FileType javascript setl tabstop=4|setl shiftwidth=4|setl expandtab softtabstop=4
+  autocmd FileType javascript setl tabstop=2|setl shiftwidth=2|setl expandtab softtabstop=2
+  autocmd FileType javascript set formatprg=prettier\ --stdin
 augroup END
 
 
@@ -712,3 +721,14 @@ endif
 
 " tags
 set tags=./tags;
+
+" vim-test
+nmap <silent> t<C-n> :TestNearest<CR>
+nmap <silent> t<C-f> :TestFile<CR>
+nmap <silent> t<C-s> :TestSuite<CR>
+nmap <silent> t<C-l> :TestLast<CR>
+nmap <silent> t<C-g> :TestVisit<CR>
+
+let test#strategy = "vimux"
+let test#python#runner = 'pytest'
+let test#python#pytest#options = '-x --lf -s --reuse-db'
